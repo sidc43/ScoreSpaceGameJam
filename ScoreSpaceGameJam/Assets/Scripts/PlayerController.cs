@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
 {
     public float speed;
     public float hp;
+    public bool invincivble;
 
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private Vector2 movement;
@@ -29,11 +30,12 @@ public class PlayerController : MonoBehaviour
         canShoot = true;
         healthbar.maxValue = hp;
         healthbar.value = hp;
+        invincivble = false;
     }
 
     void Update()
     {
-        if (GameManager.LMB)
+        if (Utility.LMB)
         {
             Shoot();
         }
@@ -58,6 +60,12 @@ public class PlayerController : MonoBehaviour
         mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
         Vector2 direction = new Vector2(mousePosition.x - transform.position.x, mousePosition.y - transform.position.y);
         transform.up = direction;
+
+        if (hp <= 0)
+        {
+            Destroy(this.gameObject);
+            Utility.GOTO("Game Over");
+        }
     }
 
     private IEnumerator Blink(GameObject go)
@@ -75,14 +83,16 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator Flash()
     {
+        invincivble = true;
         Color spriteColor = this.gameObject.GetComponent<SpriteRenderer>().color;
         for (int n = 0; n < 2; n++)
         {
             SetSpriteColor(new Color(1, 1, 1, 0), this.gameObject);
             yield return new WaitForSeconds(0.1f);
-            SetSpriteColor(spriteColor, this.gameObject);
+            SetSpriteColor(new Color(1, 1, 1, 1), this.gameObject);
             yield return new WaitForSeconds(0.1f);
         }
+        invincivble = false;
     }
 
     private void SetSpriteColor(Color col, GameObject go)
@@ -130,7 +140,7 @@ public class PlayerController : MonoBehaviour
             attackInstance.transform.position = this.transform.position;
             float angle = Mathf.Atan2(transform.up.y, transform.up.x) * Mathf.Rad2Deg;
             attackInstance.transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle - 90));
-            attackInstance.GetComponent<Rigidbody2D>().AddForce(transform.up * attack.speed * Time.deltaTime);
+            attackInstance.GetComponent<Rigidbody2D>().velocity = (transform.up * attack.speed * Time.deltaTime);
 
             attackInterval = attack.interval;
             canShoot = false;
@@ -141,16 +151,19 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.tag == "Enemy")
         {
-            Enemy enemy = collision.GetComponent<Enemy>();
-            if (hp <= 0)
+            if (!invincivble)
             {
-                Destroy(this.gameObject);
-                GameManager.GOTO("Game Over");
-            }
-            hp -= enemy.damage;
-            healthbar.value = hp;
+                Enemy enemy = collision.GetComponent<Enemy>();
+                if (hp <= 0)
+                {
+                    Destroy(this.gameObject);
+                    Utility.GOTO("Game Over");
+                }
+                hp -= enemy.damage;
+                healthbar.value = hp;
 
-            StartCoroutine(Flash());
+                StartCoroutine(Flash());
+            }
         }
     }
 

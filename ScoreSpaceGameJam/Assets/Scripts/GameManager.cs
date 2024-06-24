@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -12,6 +11,8 @@ public class GameManager : MonoBehaviour
     public GameObject enemyHolder;
     public int currentEnemies;
     public Slider waveSlider;
+
+    public bool spawnEnemiesDev;
 
     [SerializeField] private PlayerController player;
     [SerializeField] Enemy[] enemies;
@@ -38,16 +39,21 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (currentEnemies <= 0)
+        if (spawnEnemiesDev)
         {
-            if (wave != 1)
+
+
+            if (currentEnemies <= 0)
             {
-                StartCoroutine(Sleep(2));
-                waveSlider.maxValue = waveCapacity[wave - 1];
-                waveSlider.value = waveCapacity[wave - 1];
+                if (wave != 1)
+                {
+                    StartCoroutine(Sleep(2));
+                    waveSlider.maxValue = waveCapacity[wave - 1];
+                    waveSlider.value = waveCapacity[wave - 1];
+                }
+                GenerateWave(waveCapacity[wave - 1]);
+                wave++;
             }
-            GenerateWave(waveCapacity[wave - 1]);
-            wave++;
         }
     }
 
@@ -74,13 +80,5 @@ public class GameManager : MonoBehaviour
                 currentEnemies++;
             }
         }
-    }
-
-    public static bool LMB => Input.GetMouseButtonDown(0);
-
-    public void Restart() { GOTO("Main"); }
-    public static void GOTO(string scene)
-    {
-        SceneManager.LoadScene(scene);
     }
 }
