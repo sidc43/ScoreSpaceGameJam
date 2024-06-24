@@ -158,7 +158,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _name: Pink Thing
   speed: 2
-  damage: 20
+  damage: 5
+  waveSpeedMultiplier: 0
+  waveDamageMultiplier: 0
   hp: 10
   waveToSpawn: 1
   protectile: {fileID: 0}

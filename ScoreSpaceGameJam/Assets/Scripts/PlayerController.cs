@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
@@ -16,6 +18,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Attack attack;
     [SerializeField] private GameObject leftBooster;
     [SerializeField] private GameObject rightBooster;
+    [SerializeField] private Slider healthbar;
 
     private float attackInterval;
     private float attackTime;
@@ -24,6 +27,8 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         canShoot = true;
+        healthbar.maxValue = hp;
+        healthbar.value = hp;
     }
 
     void Update()
@@ -48,6 +53,11 @@ public class PlayerController : MonoBehaviour
         {
             attackInterval -= Time.fixedDeltaTime;
         }
+
+        Vector3 mousePosition = Input.mousePosition;
+        mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
+        Vector2 direction = new Vector2(mousePosition.x - transform.position.x, mousePosition.y - transform.position.y);
+        transform.up = direction;
     }
 
     private IEnumerator Blink(GameObject go)
@@ -61,6 +71,23 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
 
         goSprite.color = defaultColor;
+    }
+
+    IEnumerator Flash()
+    {
+        Color spriteColor = this.gameObject.GetComponent<SpriteRenderer>().color;
+        for (int n = 0; n < 2; n++)
+        {
+            SetSpriteColor(new Color(1, 1, 1, 0), this.gameObject);
+            yield return new WaitForSeconds(0.1f);
+            SetSpriteColor(spriteColor, this.gameObject);
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    private void SetSpriteColor(Color col, GameObject go)
+    {
+        go.GetComponent<SpriteRenderer>().color = col;
     }
 
     private void HandleSprite()
@@ -101,10 +128,31 @@ public class PlayerController : MonoBehaviour
         {
             GameObject attackInstance = Instantiate(attack.protectile);
             attackInstance.transform.position = this.transform.position;
-            attackInstance.GetComponent<Rigidbody2D>().AddForce(new Vector2(0, 1) * attack.speed * Time.deltaTime);
+            float angle = Mathf.Atan2(transform.up.y, transform.up.x) * Mathf.Rad2Deg;
+            attackInstance.transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle - 90));
+            attackInstance.GetComponent<Rigidbody2D>().AddForce(transform.up * attack.speed * Time.deltaTime);
 
             attackInterval = attack.interval;
             canShoot = false;
         }
     }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.tag == "Enemy")
+        {
+            Enemy enemy = collision.GetComponent<Enemy>();
+            if (hp <= 0)
+            {
+                Destroy(this.gameObject);
+                GameManager.GOTO("Game Over");
+            }
+            hp -= enemy.damage;
+            healthbar.value = hp;
+
+            StartCoroutine(Flash());
+        }
+    }
+
+    
 }

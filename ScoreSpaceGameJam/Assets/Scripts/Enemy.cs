@@ -7,6 +7,8 @@ public class Enemy : MonoBehaviour
     public string _name;
     public float speed;
     public float damage;
+    public float waveSpeedMultiplier;
+    public float waveDamageMultiplier;
     [SerializeField] private float hp;
     public int waveToSpawn;
     public GameObject protectile;
@@ -23,8 +25,13 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
-        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(player.transform.position - transform.position), speed * Time.deltaTime);
-        transform.position += transform.forward * Time.deltaTime * speed;
+        Vector2 direction = (player.transform.position - transform.position).normalized;
+
+        transform.position = Vector2.MoveTowards(transform.position, player.transform.position, speed * Time.deltaTime);
+
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+        transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
     }
 
     public void Damage(float dmgTaken)
@@ -34,6 +41,7 @@ public class Enemy : MonoBehaviour
         {
             Destroy(this.gameObject);
             gameManager.currentEnemies--;
+            gameManager.waveSlider.value = gameManager.currentEnemies;
         }
     }
 }
