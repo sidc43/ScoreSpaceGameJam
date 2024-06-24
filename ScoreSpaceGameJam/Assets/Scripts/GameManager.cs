@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+
 public class GameManager : MonoBehaviour
 {
     public float waveProgress;
@@ -11,6 +12,8 @@ public class GameManager : MonoBehaviour
     public GameObject enemyHolder;
     public int currentEnemies;
     public Slider waveSlider;
+
+    public bool attemptLogin;
 
     public bool spawnEnemiesDev;
 
